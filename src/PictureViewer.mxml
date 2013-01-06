@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" initialize="init(event)" layout="absolute" width="800" height="300" backgroundGradientAlphas="[1.0, 1.0]" backgroundGradientColors="[#05062C, #05062C]" backgroundAlpha="0.0">
+	<mx:Script>
+		<![CDATA[
+			import mx.effects.Resize;
+			import mx.events.EffectEvent;
+			import mx.effects.Move;
+			import mx.controls.Image;
+			import mx.collections.ArrayCollection;
+			import mx.rpc.events.ResultEvent;
+			import mx.controls.Alert;
+			
+			[Bindable]
+			public var picslist:ArrayCollection;
+			public var pos:int = 0;
+			
+			public var images:Array;
+			
+			private var myDuration:int = 500;
+			
+			private var opleft_x:int = -300;
+			private var opleft_y:int = 104;
+			private var opleft_w:int = 92;
+			private var opleft_h:int = 104;
+			
+			private var opright_x:int = 400;
+			private var opright_y:int = -300;
+			private var opright_w:int = 92;
+			private var opright_h:int = 104;
+			
+			private function init(e:Event):void
+			{
+				picslist = new ArrayCollection();
+				picsweb.addEventListener(ResultEvent.RESULT, handlePicResult);
+				picsweb.send(null);
+			}
+			
+			
+			private function handlePicResult(event:ResultEvent):void
+			{
+				picslist = event.result.pic;
+				
+				images = new Array();
+				for (var i:int=0;i<5;i++)
+				{
+					loadListToImage(i);
+					if (i>=3)
+						moveOffPageRight(images[i]);
+				}
+				
+				pos = 1;
+				refresh(-1);
+				
+				
+			}
+			
+			private function loadListToImage(pos:int):void
+			{
+				var thisOne:Image = new Image();
+				thisOne.load(picslist.getItemAt(pos)['path']);
+				images.push(thisOne);
+				thisOne.x = 10;
+				thisOne.y = 10;
+				thisOne.width = 350;
+				thisOne.height = 250;
+				this.addChild(thisOne);
+			}
+			
+			private function nextListener(event:Event):void
+			{
+				refresh(1);
+			}
+			
+			private function prevListener(event:Event):void
+			{
+				refresh(0);
+			}
+			
+			private function moveToPrev(item:Image):void
+			{
+				item.removeEventListener(MouseEvent.CLICK, nextListener);
+				item.addEventListener(MouseEvent.CLICK, prevListener);
+				var m:Move = new Move();
+				m.target = item;
+				m.xTo = prevTemplate.x;
+				m.yTo = prevTemplate.y;
+				m.duration = myDuration;
+				
+				var s:Resize = new Resize();
+				s.heightTo = prevTemplate.height;
+				s.widthTo = prevTemplate.width;
+				s.duration = myDuration;
+				s.target = item;
+				
+				s.play();
+				m.play();
+			}
+			
+			private function moveToCurr(item:Image):void
+			{
+				item.removeEventListener(MouseEvent.CLICK, nextListener);
+				item.removeEventListener(MouseEvent.CLICK, prevListener);
+				var m:Move = new Move();
+				m.target = item;
+				m.xTo = currTemplate.x;
+				m.yTo = currTemplate.y;
+				m.duration = myDuration;
+				
+				var s:Resize = new Resize();
+				s.heightTo = currTemplate.height;
+				s.widthTo = currTemplate.width;
+				s.duration = myDuration;
+				s.target = item;
+				
+				s.play();
+				m.play();
+			}
+			
+			private function normalSizeListener(e:MouseEvent):void
+			{
+				
+			}
+			
+			private function maximizeListener(e:MouseEvent):void
+			{
+				
+			}
+			
+			private function moveToMax(item:Image):void
+			{
+				item.removeEventListener(MouseEvent.CLICK, nextListener);
+				item.removeEventListener(MouseEvent.CLICK, prevListener);
+				item.addEventListener(MouseEvent.CLICK, normalSizeListener);
+				var m:Move = new Move();
+				m.target = item;
+				m.xTo = maxTemplate.x;
+				m.yTo = maxTemplate.y;
+				m.duration = myDuration;
+				
+				var s:Resize = new Resize();
+				s.heightTo = maxTemplate.height;
+				s.widthTo = maxTemplate.width;
+				s.duration = myDuration;
+				s.target = item;
+				
+				s.play();
+				m.play();
+			}
+			
+			private function moveToNext(item:Image):void
+			{
+				item.removeEventListener(MouseEvent.CLICK, prevListener);
+				item.addEventListener(MouseEvent.CLICK, nextListener);
+				var m:Move = new Move();
+				m.target = item;
+				m.xTo = nextTemplate.x;
+				m.yTo = nextTemplate.y;
+				m.duration = myDuration;
+				
+				var s:Resize = new Resize();
+				s.heightTo = nextTemplate.height;
+				s.widthTo = nextTemplate.width;
+				s.duration = myDuration;
+				s.target = item;
+				
+				s.play();
+				m.play();
+			}
+			
+			private function moveOffPageLeft(item:Image):void
+			{
+				var m:Move = new Move();
+				m.target = item;
+				m.xTo = opleft_x;
+				m.yTo = opleft_y;
+				m.duration = myDuration;
+				var s:Resize = new Resize();
+				s.heightTo = opleft_h;
+				s.widthTo = opleft_w;
+				s.duration = myDuration;
+				s.target = item;
+				
+				s.play();
+				m.play();
+			}
+			
+			private function moveOffPageRight(item:Image):void
+			{
+				var m:Move = new Move();
+				m.target = item;
+				m.xTo = opright_x;
+				m.yTo = opright_y;
+				m.duration = myDuration;
+				var s:Resize = new Resize();
+				s.heightTo = opright_h;
+				s.widthTo = opright_w;
+				s.duration = myDuration;
+				s.target = item;
+				
+				s.play();
+				m.play();
+			}
+			
+			/**
+			 * dir = 1: Forward
+			 * dir = 0: Backward
+			 */
+			private function refresh(dir:int):void
+			{
+				if (dir==1)
+				{
+					if (pos+1 < images.length)
+					{
+						pos++;
+					}
+				}
+				else if (dir==0)
+				{
+					if (pos-1 >= 0)
+					{
+						pos--;
+					}
+				}
+				
+				if (null != images[pos-2]);
+					moveOffPageLeft(images[pos-2]);
+				if (null != images[pos-1]);
+					moveToPrev(images[pos-1]);
+				moveToCurr(images[pos]);
+				if (null != images[pos+1])
+				{
+					moveToNext(images[pos+1]);
+				}
+				else
+				{
+					loadListToImage(pos+1);
+					moveToNext(images[pos+1]);
+				}
+				
+				for (var i:int=2;i<6;i++)
+				{
+					if (null != images[pos+i])
+					{
+						moveOffPageRight(images[pos+i]);
+					}
+					else
+					{
+						loadListToImage(pos+i);
+						moveOffPageRight(images[pos+i]);
+					}
+				}
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:HTTPService id="picsweb" url="http://bluelunarquartet.com/pics.xml" method="GET" />
+	<mx:Image x="10" y="106" width="186" height="118" id="prevTemplate"/>
+	<mx:Image x="209" y="10" width="382" height="280" id="currTemplate"/>
+	<mx:Image x="622" y="106" width="168" height="118" id="nextTemplate"/>
+	<mx:Image x="0" y="0" width="678" height="98" id="maxTemplate"/>
+
+</mx:Application>
